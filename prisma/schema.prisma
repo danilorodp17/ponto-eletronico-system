@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String          @id @default(cuid())
+  name           String
+  email          String          @unique
+  password       String
+  role           Role            @default(EMPLOYEE)
+  department     String?
+  position       String?
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  timeRecords    TimeRecord[]
+  justifications Justification[]
+  workSchedule   WorkSchedule?
+}
+
+model TimeRecord {
+  id        String     @id @default(cuid())
+  userId    String
+  type      RecordType
+  timestamp DateTime   @default(now())
+  latitude  Float?
+  longitude Float?
+  notes     String?
+  createdAt DateTime   @default(now())
+
+  user      User       @relation(fields: [userId], references: [id])
+}
+
+model WorkSchedule {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  entryTime   String
+  exitTime    String
+  workingDays String[]
+
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Justification {
+  id        String              @id @default(cuid())
+  userId    String
+  date      DateTime
+  reason    String
+  status    JustificationStatus @default(PENDING)
+  createdAt DateTime            @default(now())
+
+  user      User                @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+enum RecordType {
+  ENTRY
+  EXIT
+}
+
+enum JustificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
